@@ -55,7 +55,17 @@ $('chatForm').addEventListener('submit',async ev=>{
    const raw=await response.text();
    let data;
    try { data=raw ? JSON.parse(raw) : {}; } catch { throw Error(`サーバーがJSON以外を返しました（HTTP ${response.status}）。VercelのFunctionsログを確認してください。`); }
-   if(!response.ok)throw Error(data?.error||`APIリクエストに失敗しました（HTTP ${response.status}）`);
+   if (!response.ok) {
+  const detail = data?.error;
+  const message =
+    typeof detail === 'string'
+      ? detail
+      : detail?.message
+        || JSON.stringify(detail)
+        || 'APIリクエストに失敗しました';
+
+  throw new Error(`HTTP ${response.status}: ${message}`);
+}
    const answer=(data?.answer||'').trim();
    if(!answer)throw Error('回答が空でした。Groqのモデル設定や利用制限を確認してください。');
    conversation.push({role:'assistant',content:answer});
